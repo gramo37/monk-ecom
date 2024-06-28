@@ -41,7 +41,7 @@ const VariantRow: React.FC<{ variant: TVariant; product: TProduct }> = ({
     transform: CSS.Transform.toString(transform),
   };
   return (
-    <tr className="border-b" ref={setNodeRef} {...attributes} style={style}>
+    <tr className="border-b touch-none" ref={setNodeRef} {...attributes} style={style}>
       <td className="p-2 text-center cursor-move" {...listeners}>
         <DragIndicatorIcon sx={{ color: "gray" }} />
       </td>
