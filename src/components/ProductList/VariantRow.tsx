@@ -43,7 +43,7 @@ const VariantRow: React.FC<{ variant: TVariant; product: TProduct }> = ({
   return (
     <tr className="border-b" ref={setNodeRef} {...attributes} style={style}>
       <td className="p-2 text-center cursor-move" {...listeners}>
-        <DragIndicatorIcon />
+        <DragIndicatorIcon sx={{ color: "gray" }} />
       </td>
       <td className="flex items-center bg-white m-2 rounded-full pl-5">
         <input
@@ -54,7 +54,7 @@ const VariantRow: React.FC<{ variant: TVariant; product: TProduct }> = ({
       </td>
       <td className="p-2 text-center">
         <button onClick={deleteVariant}>
-          <CloseIcon />
+          <CloseIcon sx={{ color: "gray" }} />
         </button>
       </td>
     </tr>

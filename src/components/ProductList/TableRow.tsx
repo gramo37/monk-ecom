@@ -5,7 +5,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { TProduct } from "../../types/products";
 import { flat_off, off } from "../../constants";
 import useProductsStore from "../../store/products.store";
@@ -44,7 +43,9 @@ const TableRow: React.FC<TableRowProps> = ({
   const [discountValue, setDiscountValue] = useState<number>(
     product?.discount ?? 0
   );
-  const [showVariants, setShowVariants] = useState(false);
+  const [showVariants, setShowVariants] = useState(
+    product.variants.length <= 1
+  );
   const setSelectedProductForEdit = useProductsStore(
     (state) => state.setSelectedProductForEdit
   );
@@ -109,7 +110,7 @@ const TableRow: React.FC<TableRowProps> = ({
         style={style}
       >
         <td className="p-2 text-center cursor-move" {...listeners}>
-          <DragIndicatorIcon />
+          <DragIndicatorIcon sx={{ color: "gray" }} />
         </td>
         <td className="p-2 text-center">{index + 1}</td>
         <td className="flex items-center bg-white m-2">
@@ -122,7 +123,7 @@ const TableRow: React.FC<TableRowProps> = ({
             className="cursor-pointer"
             onClick={() => handleEditIcon(index)}
           >
-            <EditIcon />
+            <EditIcon sx={{ color: "gray" }} />
           </button>
         </td>
         <td className="p-2 text-center">
@@ -151,7 +152,7 @@ const TableRow: React.FC<TableRowProps> = ({
                   className="cursor-pointer ml-1"
                   onClick={() => setIsDiscountMode(false)}
                 >
-                  <CloseIcon />
+                  <CloseIcon sx={{ color: "gray" }} />
                 </button>
               </div>
             ) : (
@@ -167,9 +168,11 @@ const TableRow: React.FC<TableRowProps> = ({
           </div>
         </td>
         <td>
-          <button onClick={() => deleteProduct(index)}>
-            <DeleteIcon />
-          </button>
+          {storeProducts.length > 1 && (
+            <button onClick={() => deleteProduct(index)}>
+              <CloseIcon sx={{ color: "gray" }} />
+            </button>
+          )}
         </td>
       </tr>
       <tr className="touch-none" ref={setNodeRef} {...attributes} style={style}>
@@ -177,13 +180,15 @@ const TableRow: React.FC<TableRowProps> = ({
         <td></td>
         <td></td>
         <td className="text-right">
-          <button
-            onClick={() => setShowVariants(!showVariants)}
-            className="underline text-blue-500 px-3 py-1 rounded"
-          >
-            {showVariants ? "Hide Variants" : "Show Variants"}
-            {showVariants ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </button>
+          {product.variants.length > 1 && (
+            <button
+              onClick={() => setShowVariants(!showVariants)}
+              className="underline text-blue-500 px-3 py-1 rounded"
+            >
+              {showVariants ? "Hide Variants" : "Show Variants"}
+              {showVariants ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </button>
+          )}
         </td>
       </tr>
 
