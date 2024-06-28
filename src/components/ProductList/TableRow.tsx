@@ -9,12 +9,28 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { TProduct } from "../../types/products";
 import { flat_off, off } from "../../constants";
 import useProductsStore from "../../store/products.store";
-
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 interface TableRowProps {
-    index: number;
-    product: TProduct;
-    setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  }
+  index: number;
+  product: TProduct;
+  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
 const TableRow: React.FC<TableRowProps> = ({
   index,
@@ -46,10 +62,53 @@ const TableRow: React.FC<TableRowProps> = ({
     setProducts(newProducts);
   };
 
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: product.id,
+    });
+
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const getVariantPos = (id: number) =>
+    product.variants.findIndex((v) => v.id === id);
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id === over.id) return;
+
+    const originalPos = getVariantPos(active.id);
+    const newPos = getVariantPos(over.id);
+
+    const newVariants = arrayMove(product.variants, originalPos, newPos);
+    const newProducts = storeProducts.map((prod) => {
+      if (prod.id === product.id) {
+        return { ...product, variants: newVariants };
+      }
+      return prod;
+    });
+    setProducts(newProducts);
+  };
+
   return (
     <>
-      <tr className="border-b relative pb-6">
-        <td className="p-2 text-center cursor-move">
+      <tr
+        className="border-b touch-none"
+        ref={setNodeRef}
+        {...attributes}
+        style={style}
+      >
+        <td className="p-2 text-center cursor-move" {...listeners}>
           <DragIndicatorIcon />
         </td>
         <td className="p-2 text-center">{index + 1}</td>
@@ -113,7 +172,7 @@ const TableRow: React.FC<TableRowProps> = ({
           </button>
         </td>
       </tr>
-      <tr>
+      <tr className="touch-none" ref={setNodeRef} {...attributes} style={style}>
         <td></td>
         <td></td>
         <td></td>
@@ -127,23 +186,35 @@ const TableRow: React.FC<TableRowProps> = ({
           </button>
         </td>
       </tr>
-      {showVariants && (
-        <tr>
+
+      <tr>
+        {showVariants && (
           <td colSpan={5} className="p-2">
             <table className="table-auto w-[80%] border-collapse float-right">
-              <tbody>
-                {product.variants.map((variant) => (
-                  <VariantRow
-                    key={variant.id}
-                    variant={variant}
-                    product={product}
-                  />
-                ))}
-              </tbody>
+              <DndContext
+                sensors={sensors}
+                onDragEnd={handleDragEnd}
+                collisionDetection={closestCorners}
+              >
+                <SortableContext
+                  items={product.variants}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <tbody>
+                    {product.variants.map((variant) => (
+                      <VariantRow
+                        key={variant.id}
+                        variant={variant}
+                        product={product}
+                      />
+                    ))}
+                  </tbody>
+                </SortableContext>
+              </DndContext>
             </table>
           </td>
-        </tr>
-      )}
+        )}
+      </tr>
     </>
   );
 };

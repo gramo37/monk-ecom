@@ -2,6 +2,8 @@ import useProductsStore from "../../store/products.store";
 import { TProduct, TVariant } from "../../types/products";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import CloseIcon from "@mui/icons-material/Close";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const VariantRow: React.FC<{ variant: TVariant; product: TProduct }> = ({
   variant,
@@ -9,6 +11,7 @@ const VariantRow: React.FC<{ variant: TVariant; product: TProduct }> = ({
 }) => {
   const setProducts = useProductsStore((state) => state.setProducts);
   const storeProducts = useProductsStore((state) => state.products);
+
   const deleteVariant = () => {
     const newProducts = storeProducts
       .map((prod) => {
@@ -27,9 +30,19 @@ const VariantRow: React.FC<{ variant: TVariant; product: TProduct }> = ({
       .filter((product) => product !== undefined) as TProduct[];
     setProducts(newProducts);
   };
+
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: variant.id,
+    });
+
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  };
   return (
-    <tr className="border-b">
-      <td className="p-2 text-center cursor-move">
+    <tr className="border-b" ref={setNodeRef} {...attributes} style={style}>
+      <td className="p-2 text-center cursor-move" {...listeners}>
         <DragIndicatorIcon />
       </td>
       <td className="flex items-center bg-white m-2 rounded-full pl-5">
