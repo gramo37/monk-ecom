@@ -103,7 +103,7 @@ const TableRow: React.FC<TableRowProps> = ({
   return (
     <>
       <tr
-        className="border-b touch-none"
+        className="border-b relative touch-none"
         ref={setNodeRef}
         {...attributes}
         style={style}

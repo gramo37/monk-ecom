@@ -26,7 +26,7 @@ const AddProductButton = () => {
   }
 
   return (
-    <div className="w-full flex justify-end pr-12">
+    <div className="w-full flex justify-end pr-2">
       <button className="py-2 px-8 font-bold text-green-600 border-green-600 border-2" onClick={addProduct}>Add Product</button>
     </div>
   );
