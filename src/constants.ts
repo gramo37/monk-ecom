@@ -2,6 +2,8 @@ import { TProduct } from "./types/products";
 
 export const off = "% Off";
 export const flat_off = "flat Off";
+export const PRODUCT_LIST = "http://stageapi.monkcommerce.app/task/products/search";
+export const APIKEY = import.meta.env.VITE_APIKEY;
 
 export const products: TProduct[] = [
   {

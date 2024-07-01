@@ -4,7 +4,10 @@ import { TProduct } from "../types/products";
 import CloseIcon from "@mui/icons-material/Close";
 import Checkbox from "@mui/material/Checkbox";
 import useProductsStore from "../store/products.store";
-import { products as prod } from "../constants";
+import { APIKEY, PRODUCT_LIST, products as prod } from "../constants";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -16,13 +19,40 @@ const ProductPicker: React.FC<ProductModalProps> = ({
   onRequestClose,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [limit, setLimit] = useState(10);
+  const page = 1;
   const setProducts = useProductsStore((state) => state.setProducts);
   const storeProducts = useProductsStore((state) => state.products);
   const [selectedProducts, setSelectedProducts] = useState<TProduct[]>([]);
   const selectedProductForEdit = useProductsStore(
     (state) => state.selectedProductForEdit
   );
-  let products = prod.filter(
+  let { data: products } = useQuery({
+    queryKey: ["PRODUCT_LIST", page, limit, searchTerm],
+    queryFn: async () => {
+      const res = await axios.get(PRODUCT_LIST, {
+        params: {
+          limit,
+          page,
+          search: searchTerm,
+        },
+        headers: {
+          "x-api-key": APIKEY,
+        },
+      });
+      return res as unknown as TProduct[];
+    },
+  });
+
+  // If the products are not available use a temporary array of products
+  if (!products) {
+    products = prod.filter((product) =>
+      product.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  // Avoid addition of a product twice
+  products = products.filter(
     (product) => !storeProducts.find((prod) => prod.id === product.id)
   );
 
@@ -101,10 +131,6 @@ const ProductPicker: React.FC<ProductModalProps> = ({
       : false;
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const addProducts = () => {
     const newProducts = [];
     if (selectedProductForEdit === undefined) {
@@ -156,64 +182,74 @@ const ProductPicker: React.FC<ProductModalProps> = ({
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full p-2 mb-4 border border-gray-300 rounded"
         />
-        <div className="max-h-80 overflow-y-auto">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="mb-4">
-              <div className="mb-2 flex justify-start items-center border border-r-0 border-l-0 border-t-0">
-                <Checkbox
-                  sx={{
-                    "& .MuiSvgIcon-root": { fontSize: 30 },
-                    border: "none",
-                    outline: "none",
-                    marginRight: "10px",
-                    color: "gray",
-                    "&.Mui-checked": {
-                      color: "green",
-                    },
-                  }}
-                  checked={isProductSelected(product.id)}
-                  onChange={() => handleProductChange(product.id)}
-                />
-                <img
-                  width={80}
-                  height={80}
-                  className="w-14 h-14 my-4 mx-1 mr-3"
-                  src={product.image.src}
-                  alt="product"
-                />
-                {product.title}
-              </div>
-              <div className="">
-                {product.variants.map((variant) => (
-                  <div
-                    key={variant.id}
-                    className="flex justify-between items-center border border-r-0 border-l-0 border-t-0"
-                  >
-                    <div className="py-2 pl-20">
-                      <Checkbox
-                        sx={{
-                          "& .MuiSvgIcon-root": { fontSize: 28 },
-                          border: "none",
-                          outline: "none",
-                          marginRight: "10px",
-                          color: "gray",
-                          "&.Mui-checked": {
-                            color: "green",
-                          },
-                        }}
-                        checked={isVariantSelected(product.id, variant.id)}
-                        onChange={() =>
-                          handleVariantChange(product.id, variant.id)
-                        }
-                      />
-                      {variant.title}
+        <div className="max-h-80 overflow-y-auto" id="scrollableDiv">
+          <InfiniteScroll
+            dataLength={limit}
+            loader={<h4>Loading...</h4>}
+            next={() => {
+              setLimit((li) => li + 10);
+            }}
+            hasMore={limit <= 20}
+            scrollableTarget="scrollableDiv"
+          >
+            {products.map((product) => (
+              <div key={product.id} className="mb-4">
+                <div className="mb-2 flex justify-start items-center border border-r-0 border-l-0 border-t-0">
+                  <Checkbox
+                    sx={{
+                      "& .MuiSvgIcon-root": { fontSize: 30 },
+                      border: "none",
+                      outline: "none",
+                      marginRight: "10px",
+                      color: "gray",
+                      "&.Mui-checked": {
+                        color: "green",
+                      },
+                    }}
+                    checked={isProductSelected(product.id)}
+                    onChange={() => handleProductChange(product.id)}
+                  />
+                  <img
+                    width={80}
+                    height={80}
+                    className="w-14 h-14 my-4 mx-1 mr-3"
+                    src={product.image.src}
+                    alt="product"
+                  />
+                  {product.title}
+                </div>
+                <div>
+                  {product.variants.map((variant) => (
+                    <div
+                      key={variant.id}
+                      className="flex justify-between items-center border border-r-0 border-l-0 border-t-0"
+                    >
+                      <div className="py-2 pl-20">
+                        <Checkbox
+                          sx={{
+                            "& .MuiSvgIcon-root": { fontSize: 28 },
+                            border: "none",
+                            outline: "none",
+                            marginRight: "10px",
+                            color: "gray",
+                            "&.Mui-checked": {
+                              color: "green",
+                            },
+                          }}
+                          checked={isVariantSelected(product.id, variant.id)}
+                          onChange={() =>
+                            handleVariantChange(product.id, variant.id)
+                          }
+                        />
+                        {variant.title}
+                      </div>
+                      <div className="mr-6">₹ {variant.price}</div>
                     </div>
-                    <div className="mr-6">₹ {variant.price}</div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </InfiniteScroll>
         </div>
         <div className="flex justify-between items-center mt-4">
           <div>{selectedProducts.length} selected</div>
