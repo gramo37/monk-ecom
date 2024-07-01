@@ -185,7 +185,7 @@ const ProductPicker: React.FC<ProductModalProps> = ({
         <div className="max-h-80 overflow-y-auto" id="scrollableDiv">
           <InfiniteScroll
             dataLength={limit}
-            loader={<h4>Loading...</h4>}
+            loader={undefined}
             next={() => {
               setLimit((li) => li + 10);
             }}
