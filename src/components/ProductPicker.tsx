@@ -4,7 +4,7 @@ import { TProduct } from "../types/products";
 import CloseIcon from "@mui/icons-material/Close";
 import Checkbox from "@mui/material/Checkbox";
 import useProductsStore from "../store/products.store";
-import { APIKEY, PRODUCT_LIST, products as prod } from "../constants";
+import { APIKEY, PRODUCT_LIST } from "../constants";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
