@@ -229,12 +229,9 @@ const ProductPicker: React.FC<ProductModalProps> = ({
                         src={product.image.src}
                         alt="product"
                         placeholder={
-                          <img
-                            width={80}
-                            height={80}
-                            src="https://placehold.co/100x100"
-                            alt="placeholder"
-                          />
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black-500"></div>
+                          </div>
                         }
                       />
                     </div>
