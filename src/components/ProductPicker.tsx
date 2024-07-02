@@ -40,7 +40,7 @@ const ProductPicker: React.FC<ProductModalProps> = ({
           "x-api-key": APIKEY,
         },
       });
-      return res as unknown as TProduct[];
+      return res.data as unknown as TProduct[];
     },
   });
 
@@ -184,7 +184,7 @@ const ProductPicker: React.FC<ProductModalProps> = ({
         />
         <div className="max-h-80 overflow-y-auto" id="scrollableDiv">
           <InfiniteScroll
-            dataLength={limit}
+            dataLength={products.length}
             loader={undefined}
             next={() => {
               setLimit((li) => li + 10);
