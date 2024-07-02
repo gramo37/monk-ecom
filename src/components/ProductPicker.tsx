@@ -42,7 +42,7 @@ const ProductPicker: React.FC<ProductModalProps> = ({
           "x-api-key": APIKEY,
         },
       });
-      setProductsList((prev) => [...prev, ...res.data]);
+      if (res) setProductsList(res?.data ?? []);
     },
   });
 
@@ -53,6 +53,12 @@ const ProductPicker: React.FC<ProductModalProps> = ({
     );
     setProductsList(prod);
   }, [storeProducts]);
+
+  useEffect(() => {
+    setPage(1);
+    setProductsList([]);
+    setHasMore(true)
+  }, [searchTerm]);
 
   const findProductById = (productId: number) =>
     productsList.find((p) => p.id === productId);
@@ -177,99 +183,111 @@ const ProductPicker: React.FC<ProductModalProps> = ({
           type="text"
           placeholder="Search products..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setPage(1);
+            setProductsList([]);
+            setSearchTerm(e.target.value);
+          }}
           className="w-full p-2 mb-4 border border-gray-300 rounded"
         />
         <div className="max-h-80 overflow-y-auto" id="scrollableDiv">
-          <InfiniteScroll
-            dataLength={productsList.length}
-            loader={<p>Loading new products...</p>}
-            next={async () => {
-              const res = await axios.get(PRODUCT_LIST, {
-                params: {
-                  limit,
-                  page: page + 1,
-                  search: searchTerm,
-                },
-                headers: {
-                  "x-api-key": APIKEY,
-                },
-              });
+          {!productsList || productsList?.length === 0 ? (
+            <p>No Products Found</p>
+          ) : (
+            <InfiniteScroll
+              dataLength={productsList.length}
+              loader={<p>Loading new products...</p>}
+              next={async () => {
+                const res = await axios.get(PRODUCT_LIST, {
+                  params: {
+                    limit,
+                    page: page + 1,
+                    search: searchTerm,
+                  },
+                  headers: {
+                    "x-api-key": APIKEY,
+                  },
+                });
 
-              if (!res || res?.data?.length === 0) setHasMore(false);
-              setPage((page) => page + 1);
-              setProductsList((prev) => [...prev, ...res.data]);
-            }}
-            hasMore={hasMore}
-            scrollableTarget="scrollableDiv"
-          >
-            {productsList.map((product) => {
-              return (
-                <div key={product.id} className="mb-4">
-                  <div className="mb-2 flex justify-start items-center border border-r-0 border-l-0 border-t-0">
-                    <Checkbox
-                      sx={{
-                        "& .MuiSvgIcon-root": { fontSize: 30 },
-                        border: "none",
-                        outline: "none",
-                        marginRight: "10px",
-                        color: "gray",
-                        "&.Mui-checked": {
-                          color: "green",
-                        },
-                      }}
-                      checked={isProductSelected(product.id)}
-                      onChange={() => handleProductChange(product.id)}
-                    />
-                    <div className="w-14 h-14 my-4 mx-1 mr-3 box-border">
-                      <LazyLoadImage
-                        width={80}
-                        height={80}
-                        className="w-14 h-14 box-border"
-                        src={product.image.src}
-                        alt="product"
-                        placeholder={
-                          <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black-500"></div>
-                          </div>
-                        }
+                if (!res || !res?.data || res?.data?.length === 0)
+                  return setHasMore(false);
+                setPage((page) => page + 1);
+                setProductsList((prev) => [...prev, ...res.data]);
+              }}
+              hasMore={hasMore}
+              scrollableTarget="scrollableDiv"
+            >
+              {productsList.map((product) => {
+                return (
+                  <div key={product.id} className="mb-4">
+                    <div className="mb-2 flex justify-start items-center border border-r-0 border-l-0 border-t-0">
+                      <Checkbox
+                        sx={{
+                          "& .MuiSvgIcon-root": { fontSize: 30 },
+                          border: "none",
+                          outline: "none",
+                          marginRight: "10px",
+                          color: "gray",
+                          "&.Mui-checked": {
+                            color: "green",
+                          },
+                        }}
+                        checked={isProductSelected(product.id)}
+                        onChange={() => handleProductChange(product.id)}
                       />
-                    </div>
-                    {product.title}
-                  </div>
-                  <div>
-                    {product.variants.map((variant) => (
-                      <div
-                        key={variant.id}
-                        className="flex justify-between items-center border border-r-0 border-l-0 border-t-0"
-                      >
-                        <div className="py-2 pl-20">
-                          <Checkbox
-                            sx={{
-                              "& .MuiSvgIcon-root": { fontSize: 28 },
-                              border: "none",
-                              outline: "none",
-                              marginRight: "10px",
-                              color: "gray",
-                              "&.Mui-checked": {
-                                color: "green",
-                              },
-                            }}
-                            checked={isVariantSelected(product.id, variant.id)}
-                            onChange={() =>
-                              handleVariantChange(product.id, variant.id)
-                            }
-                          />
-                          {variant.title}
-                        </div>
-                        <div className="mr-6">₹ {variant.price}</div>
+                      <div className="w-14 h-14 my-4 mx-1 mr-3 box-border">
+                        <LazyLoadImage
+                          width={80}
+                          height={80}
+                          className="w-14 h-14 box-border"
+                          src={product.image.src}
+                          alt="product"
+                          placeholder={
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black-500"></div>
+                            </div>
+                          }
+                        />
                       </div>
-                    ))}
+                      {product.title}
+                    </div>
+                    <div>
+                      {product.variants.map((variant) => (
+                        <div
+                          key={variant.id}
+                          className="flex justify-between items-center border border-r-0 border-l-0 border-t-0"
+                        >
+                          <div className="py-2 pl-20">
+                            <Checkbox
+                              sx={{
+                                "& .MuiSvgIcon-root": { fontSize: 28 },
+                                border: "none",
+                                outline: "none",
+                                marginRight: "10px",
+                                color: "gray",
+                                "&.Mui-checked": {
+                                  color: "green",
+                                },
+                              }}
+                              checked={isVariantSelected(
+                                product.id,
+                                variant.id
+                              )}
+                              onChange={() =>
+                                handleVariantChange(product.id, variant.id)
+                              }
+                            />
+                            {variant.title}
+                          </div>
+                          <div className="mr-6">₹ {variant.price}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </InfiniteScroll>
+                );
+              })}
+            </InfiniteScroll>
+          )}
         </div>
         <div className="flex justify-between items-center mt-4">
           <div>{selectedProducts.length} selected</div>
